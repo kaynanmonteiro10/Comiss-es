@@ -299,7 +299,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   <div class="tabs">
     <div class="tab active" id="tab-meus" onclick="setTab('meus')">Meus Contratos</div>
     <div class="tab" id="tab-dupla" onclick="setTab('dupla')">Contratos da Dupla</div>
-    <div class="tab" id="tab-todos" onclick="setTab('todos')">Todos</div>
+    <div class="tab" id="tab-todos" onclick="setTab('todos')" style="display:none;">Todos</div>
   </div>
 
   <!-- FILTER + NEW -->
@@ -388,14 +388,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       </div>
     </div>
 
-    <!-- PREVIEW -->
     <div class="preview-box" id="preview-box" style="display:none;">
       <p>Receita da empresa:</p>
       <div class="big" id="prev-receita">R$ 0,00</div>
       <div class="comissao" id="prev-comissao">Sua comissão (40%): R$ 0,00</div>
     </div>
 
-    <!-- OBS -->
     <div class="field" id="bloco-obs" style="display:none;">
       <label>Observações</label>
       <textarea id="m-obs" placeholder="Condições especiais, CCT, etc..."></textarea>
@@ -409,9 +407,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 </div>
 
 <script>
-// ════════════════════════════════════════════════
-// ESTADO
-// ════════════════════════════════════════════════
+
 let API = localStorage.getItem("telemed_api") || "";
 let VENDEDOR = localStorage.getItem("telemed_vendedor") || "";
 let tabAtiva = "meus";
@@ -427,9 +423,6 @@ const PRODUTOS_PF = [
   { nome: "Fecomércio + Odontologia", valor: 29.90 }
 ];
 
-// ════════════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════════════
 window.onload = function() {
   if (!VENDEDOR) pedirVendedor(true);
   if (API) {
@@ -465,9 +458,7 @@ function ocultarConfig() {
   if (b) b.style.display = "none";
 }
 
-// ════════════════════════════════════════════════
-// API
-// ════════════════════════════════════════════════
+
 async function api(params) {
   if (!API) { alert("Configure a URL do Apps Script."); return null; }
   setSyncStatus("load","⏳ Sincronizando...");
@@ -499,9 +490,6 @@ async function sincronizar() {
   renderContratos();
 }
 
-// ════════════════════════════════════════════════
-// STATS
-// ════════════════════════════════════════════════
 function atualizarStats() {
   const fmt = v => "R$" + v.toFixed(2).replace(".",",").replace(/\B(?=(\d{3})+(?!\d))/g,".");
   
@@ -537,9 +525,6 @@ function atualizarStats() {
   document.getElementById("st-comissao2").textContent = fmt(comissaoDupla);
 }
 
-// ════════════════════════════════════════════════
-// TABS / FILTROS
-// ════════════════════════════════════════════════
 function setTab(t) {
   tabAtiva = t;
   ["meus","dupla","todos"].forEach(id => {
@@ -570,9 +555,6 @@ function renderContratos() {
   el.innerHTML = lista.map(c => cardContrato(c)).join("");
 }
 
-// ════════════════════════════════════════════════
-// CARD DE CONTRATO
-// ════════════════════════════════════════════════
 function nomeExibicao(c) {
   if (c.TipoCliente === "Sindicato")    return c.NomeSindicato || c.NomeCliente;
   if (c.TipoCliente === "Empresa")      return c.NomeCliente;
@@ -724,9 +706,6 @@ function toggleCard(id) {
   if(chev) chev.classList.toggle("open", open);
 }
 
-// ════════════════════════════════════════════════
-// MODAL NOVO/EDITAR
-// ════════════════════════════════════════════════
 function abrirModal(c) {
   document.getElementById("modal-overlay").style.display = "flex";
   document.getElementById("m-id").value        = c ? c.ID : "";
@@ -879,9 +858,6 @@ async function salvarContrato() {
   if (res) { fecharModal(); sincronizar(); }
 }
 
-// ════════════════════════════════════════════════
-// MOVIMENTAÇÕES
-// ════════════════════════════════════════════════
 function mostrarFormMov(cid, vv) {
   const form = document.getElementById("form-mov-"+cid);
   form.style.display = form.style.display === "none" ? "block" : "none";
@@ -931,9 +907,7 @@ async function deletarContrato(id) {
   if (res) sincronizar();
 }
 
-// ════════════════════════════════════════════════
-// UTILS
-// ════════════════════════════════════════════════
+
 function esc(str) {
   return String(str||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
