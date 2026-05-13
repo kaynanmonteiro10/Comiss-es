@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Comissões — Telemedicina</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0d1117;--surface:#161b22;--surface2:#21262d;--border:#30363d;
+  --text:#e6edf3;--muted:#8b949e;--green:#3fb950;--green-dim:#1a3a24;
+  --blue:#58a6ff;--blue-dim:#1a2d4a;--amber:#d29922;--amber-dim:#3a2a0a;
+  --red:#f85149;--red-dim:#3a1a1a;--purple:#a371f7;--purple-dim:#2a1a4a;
+  --teal:#39d353;--radius:10px;--radius-lg:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── TOP BAR ── */
+.topbar{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;
+  height:56px;position:sticky;top:0;z-index:100;
+}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.logo{font-size:1.05rem;font-weight:700;color:var(--text);letter-spacing:-.3px;}
+.logo span{color:var(--green);}
+.vendedor-tag{
+  background:var(--surface2);border:1px solid var(--border);
+  padding:4px 12px;border-radius:999px;font-size:.78rem;color:var(--muted);
+  cursor:pointer;transition:border-color .2s;
+}
+.vendedor-tag:hover{border-color:var(--blue);}
+.vendedor-tag strong{color:var(--text);}
+.pill{
+  padding:3px 10px;border-radius:999px;font-size:.72rem;font-weight:600;
+  font-family:'DM Mono',monospace;
+}
+.pill-ok{background:var(--green-dim);color:var(--green);}
+.pill-err{background:var(--red-dim);color:var(--red);}
+.pill-load{background:var(--amber-dim);color:var(--amber);}
+
+/* ── LAYOUT ── */
+.wrap{max-width:1280px;margin:0 auto;padding:1.5rem;}
+
+/* ── CONFIG BANNER ── */
+.config-banner{
+  background:var(--amber-dim);border:1px solid var(--amber);
+  border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1.5rem;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.config-banner p{font-size:.83rem;color:var(--amber);flex:1;min-width:200px;}
+.config-banner input{
+  flex:2;min-width:260px;background:var(--bg);border:1px solid var(--amber);
+  color:var(--text);padding:8px 12px;border-radius:8px;font-size:.84rem;
+  font-family:'DM Mono',monospace;
+}
+.config-banner input:focus{outline:none;border-color:#e3c56c;}
+
+/* ── STATS GRID ── */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:1.5rem;}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:1rem 1.25rem;
+}
+.stat-label{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
+.stat-val{font-size:1.5rem;font-weight:700;font-family:'DM Mono',monospace;color:var(--text);}
+.stat-sub{font-size:.75rem;color:var(--muted);margin-top:4px;}
+.stat-card.green .stat-val{color:var(--green);}
+.stat-card.blue .stat-val{color:var(--blue);}
+.stat-card.purple .stat-val{color:var(--purple);}
+.stat-card.amber .stat-val{color:var(--amber);}
+
+/* ── SECTION HEADER ── */
+.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
+.sec-title{font-size:.95rem;font-weight:600;display:flex;align-items:center;gap:8px;}
+.sec-title i{font-size:18px;opacity:.6;}
+
+/* ── BUTTONS ── */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:8px;font-size:.84rem;font-weight:600;
+  border:none;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;
+}
+.btn-green{background:var(--green);color:#000;}
+.btn-green:hover{background:#3de65a;}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--border);}
+.btn-sm{padding:5px 11px;font-size:.76rem;}
+.btn-danger{background:var(--red-dim);color:var(--red);border:1px solid var(--red-dim);}
+.btn-danger:hover{background:#4a2020;}
+.btn-blue{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue-dim);}
+.btn-blue:hover{background:#22405a;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* ── CARDS DE CONTRATO ── */
+.contratos-grid{display:grid;gap:12px;}
+.contrato-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);overflow:hidden;
+  transition:border-color .2s;
+}
+.contrato-card:hover{border-color:var(--muted);}
+.cc-head{
+  padding:.9rem 1.1rem;display:flex;align-items:center;
+  justify-content:space-between;gap:8px;cursor:pointer;
+}
+.cc-left{display:flex;align-items:center;gap:10px;min-width:0;}
+.cc-tipo{
+  width:36px;height:36px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;
+}
+.tipo-sindicato{background:#1a2d4a;color:var(--blue);}
+.tipo-empresa{background:var(--purple-dim);color:var(--purple);}
+.tipo-associacao{background:var(--green-dim);color:var(--green);}
+.tipo-pessoafisica{background:#2a1a3a;color:#c084fc;}
+.cc-name{font-weight:600;font-size:.92rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cc-sub{font-size:.75rem;color:var(--muted);}
+.cc-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.cc-valor{font-family:'DM Mono',monospace;font-size:.88rem;font-weight:600;color:var(--green);}
+.cc-vendedor{font-size:.72rem;color:var(--muted);background:var(--surface2);padding:2px 8px;border-radius:999px;}
+.chevron{transition:transform .25s;color:var(--muted);font-size:14px;}
+.chevron.open{transform:rotate(180deg);}
+
+.cc-body{
+  border-top:1px solid var(--border);padding:1.1rem;
+  display:none;gap:1.1rem;flex-direction:column;
+}
+.cc-body.open{display:flex;}
+
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;}
+.info-item label{font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:2px;}
+.info-item span{font-size:.86rem;color:var(--text);}
+
+.financeiro{
+  background:var(--surface2);border-radius:var(--radius);padding:.9rem;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;
+}
+.fin-item label{font-size:.68rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px;display:block;}
+.fin-item span{font-family:'DM Mono',monospace;font-size:.95rem;font-weight:600;}
+.fin-verde{color:var(--green);}
+.fin-azul{color:var(--blue);}
+
+/* ── MOVIMENTAÇÕES ── */
+.movs-section{margin-top:.5rem;}
+.movs-title{font-size:.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:.6rem;display:flex;align-items:center;justify-content:space-between;}
+.movs-list{display:flex;flex-direction:column;gap:6px;}
+.mov-row{
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:8px;padding:.65rem 1rem;
+  display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;
+}
+.mov-mes{font-size:.75rem;font-weight:700;color:var(--muted);background:var(--surface2);padding:2px 8px;border-radius:5px;}
+.mov-info{font-size:.82rem;color:var(--text);flex:1;}
+.mov-info span{color:var(--green);font-weight:600;font-family:'DM Mono',monospace;}
+.mov-comissao{font-size:.82rem;color:var(--purple);font-weight:600;font-family:'DM Mono',monospace;}
+.mov-actions{display:flex;gap:5px;}
+
+.add-mov-form{
+  background:var(--bg);border:1px dashed var(--border);
+  border-radius:8px;padding:.75rem;display:grid;
+  grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-top:6px;
+}
+.add-mov-form label{font-size:.69rem;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);display:block;margin-bottom:3px;}
+.add-mov-form input,.add-mov-form select{
+  background:var(--surface);border:1px solid var(--border);color:var(--text);
+  padding:7px 10px;border-radius:7px;font-size:.83rem;width:100%;
+}
+.add-mov-form input:focus,.add-mov-form select:focus{outline:none;border-color:var(--blue);}
+
+.cc-actions{display:flex;gap:6px;flex-wrap:wrap;}
+
+/* ── MODAL ── */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;
+  display:flex;align-items:center;justify-content:center;padding:1rem;
+}
+.modal{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);width:100%;max-width:600px;
+  max-height:90vh;overflow-y:auto;
+}
+.modal-head{
+  padding:1rem 1.25rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.modal-head h2{font-size:1rem;font-weight:600;}
+.modal-body{padding:1.25rem;display:flex;flex-direction:column;gap:14px;}
+.modal-footer{padding:.9rem 1.25rem;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+
+.field label{font-size:.75rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px;}
+.field input,.field select,.field textarea{
+  width:100%;background:var(--bg);border:1px solid var(--border);
+  color:var(--text);padding:9px 12px;border-radius:8px;font-size:.88rem;
+  font-family:'DM Sans',sans-serif;transition:border-color .2s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--blue);}
+.field textarea{resize:vertical;min-height:70px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.field-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+.produto-btns{display:flex;flex-wrap:wrap;gap:7px;}
+.prod-btn{
+  padding:6px 12px;border-radius:7px;font-size:.78rem;font-weight:500;
+  border:1px solid var(--border);background:var(--surface2);color:var(--muted);
+  cursor:pointer;transition:all .15s;
+}
+.prod-btn:hover,.prod-btn.sel{background:var(--blue-dim);color:var(--blue);border-color:var(--blue);}
+
+.preview-box{
+  background:var(--surface2);border-radius:var(--radius);padding:.9rem;
+  border-left:3px solid var(--green);
+}
+.preview-box p{font-size:.83rem;color:var(--muted);margin-bottom:3px;}
+.preview-box .big{font-size:1.4rem;font-weight:700;font-family:'DM Mono',monospace;color:var(--green);}
+.preview-box .comissao{font-size:.95rem;color:var(--purple);font-weight:600;}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:4px;margin-bottom:1.25rem;border-bottom:1px solid var(--border);padding-bottom:0;}
+.tab{
+  padding:8px 16px;font-size:.85rem;font-weight:500;color:var(--muted);
+  cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;
+}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:3rem 1rem;color:var(--muted);}
+.empty-ico{font-size:2.5rem;margin-bottom:.75rem;opacity:.3;}
+
+/* ── SPINNER ── */
+.spin{width:14px;height:14px;border:2px solid transparent;border-top-color:currentColor;border-radius:50%;animation:sp .6s linear infinite;display:inline-block;}
+@keyframes sp{to{transform:rotate(360deg);}}
+
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem;align-items:center;}
+.filter-bar input,.filter-bar select{
+  background:var(--surface);border:1px solid var(--border);color:var(--text);
+  padding:7px 12px;border-radius:8px;font-size:.83rem;
+}
+.filter-bar input:focus,.filter-bar select:focus{outline:none;border-color:var(--blue);}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="logo">Telemed<span>Sales</span></div>
+    <div class="vendedor-tag" onclick="trocarVendedor()" title="Clique para trocar">
+      👤 <strong id="tag-vendedor">—</strong>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <button class="btn btn-ghost btn-sm" onclick="sincronizar()">↻ Sincronizar</button>
+    <span class="pill pill-load" id="sync-status">⏳ Aguardando</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- CONFIG -->
+  <div class="config-banner" id="config-banner">
+    <p>🔗 Cole a URL do Apps Script (Web App) para conectar à planilha:</p>
+    <input type="text" id="api-url" placeholder="https://script.google.com/macros/s/.../exec"/>
+    <button class="btn btn-ghost btn-sm" onclick="conectar()">Conectar</button>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Contratos</div>
+      <div class="stat-val" id="st-contratos">0</div>
+      <div class="stat-sub">fechados</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">Total Vidas</div>
+      <div class="stat-val" id="st-vidas">0</div>
+      <div class="stat-sub">incluindo movimentações</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Receita Total</div>
+      <div class="stat-val" id="st-receita">R$0</div>
+      <div class="stat-sub">valor para a empresa</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-label">Sua Comissão</div>
+      <div class="stat-val" id="st-comissao">R$0</div>
+      <div class="stat-sub">40% de tudo</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-label">Comissão Dupla</div>
+      <div class="stat-val" id="st-comissao2">R$0</div>
+      <div class="stat-sub">comissão do(a) parceiro(a)</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" id="tab-meus" onclick="setTab('meus')">Meus Contratos</div>
+    <div class="tab" id="tab-dupla" onclick="setTab('dupla')">Contratos da Dupla</div>
+    <div class="tab" id="tab-todos" onclick="setTab('todos')">Todos</div>
+  </div>
+
+  <!-- FILTER + NEW -->
+  <div class="sec-header">
+    <div class="filter-bar">
+      <input type="text" id="filtro-texto" placeholder="Buscar cliente..." oninput="renderContratos()" style="min-width:180px;"/>
+      <select id="filtro-tipo" onchange="renderContratos()">
+        <option value="">Todos os tipos</option>
+        <option value="Sindicato">Sindicato</option>
+        <option value="Empresa">Empresa</option>
+        <option value="Associação">Associação</option>
+        <option value="Pessoa Física">Pessoa Física</option>
+      </select>
+    </div>
+    <button class="btn btn-green" onclick="abrirModal()">+ Novo Contrato</button>
+  </div>
+
+  <div class="contratos-grid" id="contratos-list">
+    <div class="empty"><div class="empty-ico">📋</div>Configure a URL acima para carregar os contratos.</div>
+  </div>
+
+</div>
+
+<!-- ══ MODAL NOVO/EDITAR CONTRATO ══ -->
+<div class="overlay" id="modal-overlay" style="display:none;" onclick="if(event.target===this)fecharModal()">
+<div class="modal">
+  <div class="modal-head">
+    <h2 id="modal-titulo">Novo Contrato</h2>
+    <button class="btn btn-ghost btn-sm" onclick="fecharModal()">✕</button>
+  </div>
+  <div class="modal-body">
+    <input type="hidden" id="m-id"/>
+
+    <!-- TIPO DE CLIENTE -->
+    <div class="field">
+      <label>Tipo de Cliente</label>
+      <select id="m-tipo" onchange="atualizarCampos()">
+        <option value="">Selecione...</option>
+        <option value="Sindicato">Sindicato</option>
+        <option value="Empresa">Empresa</option>
+        <option value="Associação">Associação</option>
+        <option value="Pessoa Física">Pessoa Física</option>
+      </select>
+    </div>
+
+    <!-- CAMPOS DINÂMICOS -->
+    <div id="campos-dinamicos"></div>
+
+    <!-- PRODUTO -->
+    <div class="field" id="bloco-produto" style="display:none;">
+      <label>Produto</label>
+      <div class="produto-btns" id="prod-btns"></div>
+      <input type="text" id="m-produto" placeholder="Ou digite o nome do produto..." style="margin-top:8px;"/>
+    </div>
+
+    <!-- VALOR / VIDAS / DATA -->
+    <div class="field-row3" id="bloco-financeiro" style="display:none;">
+      <div class="field">
+        <label>Valor por Vida (R$)</label>
+        <input type="number" id="m-valorvida" step="0.01" placeholder="0,00" oninput="calcPreview()"/>
+      </div>
+      <div class="field">
+        <label>Vidas Iniciais</label>
+        <input type="number" id="m-vidas" placeholder="0" oninput="calcPreview()"/>
+      </div>
+      <div class="field">
+        <label>Vendedor</label>
+        <input type="text" id="m-vendedor" placeholder="Seu nome"/>
+      </div>
+    </div>
+
+    <div class="field-row" id="bloco-data" style="display:none;">
+      <div class="field">
+        <label>Dia de Entrada</label>
+        <input type="number" id="m-dia" min="1" max="31" placeholder="15"/>
+      </div>
+      <div class="field">
+        <label>Mês de Entrada</label>
+        <select id="m-mes">
+          <option value="">Mês...</option>
+          <option>Janeiro</option><option>Fevereiro</option><option>Março</option>
+          <option>Abril</option><option>Maio</option><option>Junho</option>
+          <option>Julho</option><option>Agosto</option><option>Setembro</option>
+          <option>Outubro</option><option>Novembro</option><option>Dezembro</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- PREVIEW -->
+    <div class="preview-box" id="preview-box" style="display:none;">
+      <p>Receita da empresa:</p>
+      <div class="big" id="prev-receita">R$ 0,00</div>
+      <div class="comissao" id="prev-comissao">Sua comissão (40%): R$ 0,00</div>
+    </div>
+
+    <!-- OBS -->
+    <div class="field" id="bloco-obs" style="display:none;">
+      <label>Observações</label>
+      <textarea id="m-obs" placeholder="Condições especiais, CCT, etc..."></textarea>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+    <button class="btn btn-green" id="btn-salvar-modal" onclick="salvarContrato()">💾 Salvar Contrato</button>
+  </div>
+</div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// ESTADO
+// ════════════════════════════════════════════════
+let API = localStorage.getItem("telemed_api") || "";
+let VENDEDOR = localStorage.getItem("telemed_vendedor") || "";
+let tabAtiva = "meus";
+let contratos = [];
+let movimentos = [];
+
+const PRODUTOS_SINDICATO = [
+  { nome: "Telemedicina Clínico Geral", valor: 5.50 },
+  { nome: "Telemedicina + Especialidades", valor: 8.90 },
+  { nome: "Telemedicina + Especialidades + Psiquiatria", valor: 10.70 }
+];
+const PRODUTOS_PF = [
+  { nome: "Fecomércio + Odontologia", valor: 29.90 }
+];
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+window.onload = function() {
+  if (!VENDEDOR) pedirVendedor(true);
+  if (API) {
+    document.getElementById("api-url").value = API;
+    ocultarConfig();
+    sincronizar();
+  }
+  document.getElementById("tag-vendedor").textContent = VENDEDOR || "definir nome";
+};
+
+function pedirVendedor(obrigatorio) {
+  const nome = prompt("Qual o seu nome (aparecerá nos contratos que você criar)?");
+  if (nome && nome.trim()) {
+    VENDEDOR = nome.trim();
+    localStorage.setItem("telemed_vendedor", VENDEDOR);
+    document.getElementById("tag-vendedor").textContent = VENDEDOR;
+  } else if (obrigatorio) {
+    pedirVendedor(true);
+  }
+}
+function trocarVendedor() { pedirVendedor(false); }
+
+function conectar() {
+  const url = document.getElementById("api-url").value.trim();
+  if (!url.includes("script.google.com")) { alert("URL inválida."); return; }
+  API = url;
+  localStorage.setItem("telemed_api", API);
+  ocultarConfig();
+  sincronizar();
+}
+function ocultarConfig() {
+  const b = document.getElementById("config-banner");
+  if (b) b.style.display = "none";
+}
+
+// ════════════════════════════════════════════════
+// API
+// ════════════════════════════════════════════════
+async function api(params) {
+  if (!API) { alert("Configure a URL do Apps Script."); return null; }
+  setSyncStatus("load","⏳ Sincronizando...");
+  try {
+    const qs = new URLSearchParams(params).toString();
+    const res = await fetch(API + "?" + qs, { redirect:"follow" });
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.erro || "Erro");
+    setSyncStatus("ok","✅ Sincronizado");
+    return json;
+  } catch(e) {
+    setSyncStatus("err","❌ " + e.message);
+    return null;
+  }
+}
+
+function setSyncStatus(tipo, msg) {
+  const el = document.getElementById("sync-status");
+  el.className = "pill " + (tipo==="ok"?"pill-ok":tipo==="err"?"pill-err":"pill-load");
+  el.textContent = msg;
+}
+
+async function sincronizar() {
+  const data = await api({ action:"READ_ALL" });
+  if (!data) return;
+  contratos  = data.contratos  || [];
+  movimentos = data.movimentos || [];
+  atualizarStats();
+  renderContratos();
+}
+
+// ════════════════════════════════════════════════
+// STATS
+// ════════════════════════════════════════════════
+function atualizarStats() {
+  const fmt = v => "R$" + v.toFixed(2).replace(".",",").replace(/\B(?=(\d{3})+(?!\d))/g,".");
+  
+  // Por vendedor
+  const meusC = contratos.filter(c => c.Vendedor === VENDEDOR);
+  const duplaC = contratos.filter(c => c.Vendedor !== VENDEDOR && c.Vendedor);
+
+  let totalVidas=0, totalReceita=0, minhaComissao=0, comissaoDupla=0;
+
+  contratos.forEach(c => {
+    const vIni = parseFloat(c.VidasIniciais)||0;
+    const vv   = parseFloat(c.ValorVida)||0;
+    totalVidas += vIni;
+    totalReceita += parseFloat(c.TotalInicial)||0;
+    const cm = (parseFloat(c.TotalInicial)||0)*0.4;
+    if (c.Vendedor === VENDEDOR) minhaComissao += cm;
+    else comissaoDupla += cm;
+  });
+
+  movimentos.forEach(m => {
+    totalVidas  += parseFloat(m.VidasAdicionadas)||0;
+    totalReceita += parseFloat(m.TotalMes)||0;
+    const co = contratos.find(c=>String(c.ID)===String(m.ContratoID));
+    const cm = parseFloat(m.ComissaoMes)||0;
+    if (co && co.Vendedor === VENDEDOR) minhaComissao += cm;
+    else comissaoDupla += cm;
+  });
+
+  document.getElementById("st-contratos").textContent = contratos.length;
+  document.getElementById("st-vidas").textContent = totalVidas;
+  document.getElementById("st-receita").textContent = fmt(totalReceita);
+  document.getElementById("st-comissao").textContent = fmt(minhaComissao);
+  document.getElementById("st-comissao2").textContent = fmt(comissaoDupla);
+}
+
+// ════════════════════════════════════════════════
+// TABS / FILTROS
+// ════════════════════════════════════════════════
+function setTab(t) {
+  tabAtiva = t;
+  ["meus","dupla","todos"].forEach(id => {
+    document.getElementById("tab-"+id).className = "tab" + (id===t?" active":"");
+  });
+  renderContratos();
+}
+
+function renderContratos() {
+  const busca = (document.getElementById("filtro-texto").value||"").toLowerCase();
+  const tipo  = document.getElementById("filtro-tipo").value;
+
+  let lista = contratos.slice();
+  if (tabAtiva === "meus")  lista = lista.filter(c => c.Vendedor === VENDEDOR);
+  if (tabAtiva === "dupla") lista = lista.filter(c => c.Vendedor !== VENDEDOR);
+  if (tipo)  lista = lista.filter(c => c.TipoCliente === tipo);
+  if (busca) lista = lista.filter(c =>
+    (c.NomeCliente||"").toLowerCase().includes(busca) ||
+    (c.NomeSindicato||"").toLowerCase().includes(busca) ||
+    (c.Responsavel||"").toLowerCase().includes(busca)
+  );
+
+  const el = document.getElementById("contratos-list");
+  if (!lista.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-ico">📭</div>${contratos.length?'Nenhum contrato encontrado.':'Nenhum contrato ainda. Clique em + Novo Contrato!'}</div>`;
+    return;
+  }
+  el.innerHTML = lista.map(c => cardContrato(c)).join("");
+}
+
+// ════════════════════════════════════════════════
+// CARD DE CONTRATO
+// ════════════════════════════════════════════════
+function nomeExibicao(c) {
+  if (c.TipoCliente === "Sindicato")    return c.NomeSindicato || c.NomeCliente;
+  if (c.TipoCliente === "Empresa")      return c.NomeCliente;
+  if (c.TipoCliente === "Associação")   return c.NomeCliente;
+  return c.NomeCliente;
+}
+function tipoIcon(t) {
+  if (t==="Sindicato")   return {emoji:"🏛",cls:"tipo-sindicato"};
+  if (t==="Empresa")     return {emoji:"🏢",cls:"tipo-empresa"};
+  if (t==="Associação")  return {emoji:"🤝",cls:"tipo-associacao"};
+  return {emoji:"👤",cls:"tipo-pessoafisica"};
+}
+const fmt = v => "R$ " + (parseFloat(v)||0).toFixed(2).replace(".",",").replace(/\B(?=(\d{3})+(?!\d))/g,".");
+
+function cardContrato(c) {
+  const icon = tipoIcon(c.TipoCliente);
+  const movs = movimentos.filter(m => String(m.ContratoID) === String(c.ID));
+
+  let totalMovReceita = movs.reduce((s,m)=>s+(parseFloat(m.TotalMes)||0),0);
+  let totalMovComissao= movs.reduce((s,m)=>s+(parseFloat(m.ComissaoMes)||0),0);
+  let totalMovVidas   = movs.reduce((s,m)=>s+(parseFloat(m.VidasAdicionadas)||0),0);
+
+  const totalGeral   = (parseFloat(c.TotalInicial)||0) + totalMovReceita;
+  const comissaoGeral= (parseFloat(c.ComissaoInicial)||0) + totalMovComissao;
+
+  // Campos específicos por tipo
+  let infosEspecificas = "";
+  if (c.TipoCliente === "Sindicato") {
+    infosEspecificas = `
+      <div class="info-item"><label>Sindicato</label><span>${c.NomeSindicato||"—"}</span></div>
+      <div class="info-item"><label>Responsável</label><span>${c.Responsavel||"—"}</span></div>
+      <div class="info-item"><label>E-mail</label><span>${c.Email||"—"}</span></div>
+      <div class="info-item"><label>Telefone</label><span>${c.Telefone||"—"}</span></div>`;
+  } else if (c.TipoCliente === "Empresa") {
+    infosEspecificas = `
+      <div class="info-item"><label>Empresa</label><span>${c.NomeCliente||"—"}</span></div>
+      <div class="info-item"><label>CNPJ</label><span>${c.CNPJ||"—"}</span></div>
+      <div class="info-item"><label>Sindicato Vinculado</label><span>${c.SindicatoVinculado||"—"}</span></div>
+      <div class="info-item"><label>Responsável</label><span>${c.Responsavel||"—"}</span></div>
+      <div class="info-item"><label>E-mail</label><span>${c.Email||"—"}</span></div>
+      <div class="info-item"><label>Telefone</label><span>${c.Telefone||"—"}</span></div>`;
+  } else if (c.TipoCliente === "Associação") {
+    infosEspecificas = `
+      <div class="info-item"><label>Associação</label><span>${c.NomeCliente||"—"}</span></div>
+      <div class="info-item"><label>Responsável</label><span>${c.Responsavel||"—"}</span></div>
+      <div class="info-item"><label>E-mail</label><span>${c.Email||"—"}</span></div>
+      <div class="info-item"><label>Telefone</label><span>${c.Telefone||"—"}</span></div>`;
+  } else {
+    infosEspecificas = `
+      <div class="info-item"><label>Nome</label><span>${c.NomeCliente||"—"}</span></div>
+      <div class="info-item"><label>Telefone</label><span>${c.Telefone||"—"}</span></div>
+      <div class="info-item"><label>E-mail</label><span>${c.Email||"—"}</span></div>`;
+  }
+
+  // Movimentações HTML
+  const movsHtml = movs.length ? movs.map(m => `
+    <div class="mov-row">
+      <span class="mov-mes">Mês ${m.NumMes}</span>
+      <div class="mov-info">+${m.VidasAdicionadas} vidas × ${fmt(m.ValorVida)} = <span>${fmt(m.TotalMes)}</span></div>
+      <div class="mov-comissao">Comissão: ${fmt(m.ComissaoMes)}</div>
+      <div class="mov-actions">
+        <button class="btn btn-ghost btn-sm" onclick='editarMov(${JSON.stringify(m)})'>✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deletarMov('${m.ID}','${c.ID}')">🗑</button>
+      </div>
+    </div>`).join("") : `<div style="font-size:.8rem;color:var(--muted);padding:.4rem 0;">Nenhuma movimentação ainda.</div>`;
+
+  return `
+<div class="contrato-card" id="card-${c.ID}">
+  <div class="cc-head" onclick="toggleCard('${c.ID}')">
+    <div class="cc-left">
+      <div class="cc-tipo ${icon.cls}">${icon.emoji}</div>
+      <div>
+        <div class="cc-name">${esc(nomeExibicao(c))}</div>
+        <div class="cc-sub">${c.TipoCliente} · ${c.Produto||"—"} · Entrou: ${c.Dia||"?"}/${c.Mes||"?"}</div>
+      </div>
+    </div>
+    <div class="cc-right">
+      <div>
+        <div class="cc-valor">${fmt(totalGeral)}</div>
+        <div style="font-size:.7rem;color:var(--purple);text-align:right;">comissão: ${fmt(comissaoGeral)}</div>
+      </div>
+      <span class="cc-vendedor">${c.Vendedor||"—"}</span>
+      <span class="chevron" id="chev-${c.ID}">▼</span>
+    </div>
+  </div>
+  <div class="cc-body" id="body-${c.ID}">
+    <!-- Infos do cliente -->
+    <div class="info-grid">
+      ${infosEspecificas}
+      <div class="info-item"><label>Produto</label><span>${c.Produto||"—"}</span></div>
+      <div class="info-item"><label>Valor/Vida</label><span>${fmt(c.ValorVida)}</span></div>
+    </div>
+    <!-- Financeiro -->
+    <div class="financeiro">
+      <div class="fin-item"><label>Vidas Iniciais</label><span class="fin-azul">${c.VidasIniciais||0}</span></div>
+      <div class="fin-item"><label>Receita Inicial</label><span class="fin-verde">${fmt(c.TotalInicial)}</span></div>
+      <div class="fin-item"><label>Comissão Inicial (40%)</label><span style="color:var(--purple)">${fmt(c.ComissaoInicial)}</span></div>
+      <div class="fin-item"><label>Vidas em Movimentações</label><span class="fin-azul">${totalMovVidas}</span></div>
+      <div class="fin-item"><label>Receita Total Geral</label><span class="fin-verde">${fmt(totalGeral)}</span></div>
+      <div class="fin-item"><label>Comissão Total</label><span style="color:var(--purple);font-size:1.05rem;">${fmt(comissaoGeral)}</span></div>
+    </div>
+    <!-- Movimentações -->
+    <div class="movs-section">
+      <div class="movs-title">
+        <span>📈 Movimentações (3 meses)</span>
+        <button class="btn btn-blue btn-sm" onclick="mostrarFormMov('${c.ID}','${c.ValorVida}')">+ Adicionar Mês</button>
+      </div>
+      <div class="movs-list" id="movs-${c.ID}">${movsHtml}</div>
+      <div id="form-mov-${c.ID}" style="display:none;">
+        <div class="add-mov-form">
+          <div>
+            <label>Mês (1, 2 ou 3)</label>
+            <select id="movmes-${c.ID}">
+              <option value="1">Mês 1</option>
+              <option value="2">Mês 2</option>
+              <option value="3">Mês 3</option>
+            </select>
+          </div>
+          <div>
+            <label>Vidas Adicionadas</label>
+            <input type="number" id="movvidas-${c.ID}" placeholder="Ex: 50"/>
+          </div>
+          <div>
+            <label>Valor/Vida (R$)</label>
+            <input type="number" id="movvv-${c.ID}" value="${c.ValorVida}" step="0.01"/>
+          </div>
+          <div style="display:flex;gap:6px;align-items:flex-end;">
+            <button class="btn btn-green btn-sm" onclick="salvarMov('${c.ID}')">Salvar</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('form-mov-${c.ID}').style.display='none'">✕</button>
+          </div>
+        </div>
+        <input type="hidden" id="movid-${c.ID}" value=""/>
+      </div>
+    </div>
+    ${c.Obs ? `<div style="font-size:.8rem;color:var(--muted);border-left:2px solid var(--border);padding-left:8px;">${esc(c.Obs)}</div>` : ""}
+    <!-- Ações -->
+    <div class="cc-actions">
+      <button class="btn btn-ghost btn-sm" onclick='editarContrato(${JSON.stringify(c)})'>✏️ Editar</button>
+      <button class="btn btn-danger btn-sm" onclick="deletarContrato('${c.ID}')">🗑 Excluir</button>
+    </div>
+  </div>
+</div>`;
+}
+
+function toggleCard(id) {
+  const body = document.getElementById("body-"+id);
+  const chev = document.getElementById("chev-"+id);
+  const open = body.classList.toggle("open");
+  if(chev) chev.classList.toggle("open", open);
+}
+
+// ════════════════════════════════════════════════
+// MODAL NOVO/EDITAR
+// ════════════════════════════════════════════════
+function abrirModal(c) {
+  document.getElementById("modal-overlay").style.display = "flex";
+  document.getElementById("m-id").value        = c ? c.ID : "";
+  document.getElementById("m-tipo").value      = c ? c.TipoCliente : "";
+  document.getElementById("m-produto").value   = c ? c.Produto : "";
+  document.getElementById("m-valorvida").value = c ? c.ValorVida : "";
+  document.getElementById("m-vidas").value     = c ? c.VidasIniciais : "";
+  document.getElementById("m-dia").value       = c ? c.Dia : "";
+  document.getElementById("m-mes").value       = c ? c.Mes : "";
+  document.getElementById("m-obs").value       = c ? c.Obs : "";
+  document.getElementById("m-vendedor").value  = c ? c.Vendedor : VENDEDOR;
+  document.getElementById("modal-titulo").textContent = c ? "Editar Contrato" : "Novo Contrato";
+
+  if (c) {
+    // preenche campos dinâmicos manualmente após gerar
+    atualizarCampos();
+    setTimeout(() => {
+      const campos = {
+        "m-nomecliente": c.NomeCliente, "m-nomesindicato": c.NomeSindicato,
+        "m-cnpj": c.CNPJ, "m-sindicatovinc": c.SindicatoVinculado,
+        "m-responsavel": c.Responsavel, "m-email": c.Email, "m-telefone": c.Telefone
+      };
+      Object.entries(campos).forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (el && val) el.value = val;
+      });
+      calcPreview();
+    }, 50);
+  } else {
+    atualizarCampos();
+  }
+}
+function fecharModal() { document.getElementById("modal-overlay").style.display = "none"; }
+function editarContrato(c) { abrirModal(c); }
+
+function atualizarCampos() {
+  const tipo = document.getElementById("m-tipo").value;
+  const dyn  = document.getElementById("campos-dinamicos");
+  const blProd = document.getElementById("bloco-produto");
+  const blFin  = document.getElementById("bloco-financeiro");
+  const blData = document.getElementById("bloco-data");
+  const blObs  = document.getElementById("bloco-obs");
+
+  if (!tipo) { dyn.innerHTML=""; blProd.style.display=blFin.style.display=blData.style.display=blObs.style.display="none"; return; }
+
+  blProd.style.display=blFin.style.display=blData.style.display=blObs.style.display="block";
+
+  let html = "";
+  if (tipo === "Sindicato") {
+    html = `
+      <div class="field-row">
+        <div class="field"><label>Nome do Sindicato</label><input type="text" id="m-nomesindicato" placeholder="Sindicato dos Trabalhadores..."/></div>
+        <div class="field"><label>Responsável</label><input type="text" id="m-responsavel" placeholder="Nome completo"/></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>E-mail</label><input type="email" id="m-email" placeholder="email@sindicato.org"/></div>
+        <div class="field"><label>Telefone</label><input type="tel" id="m-telefone" placeholder="(85) 99999-9999"/></div>
+      </div>`;
+  } else if (tipo === "Empresa") {
+    html = `
+      <div class="field-row">
+        <div class="field"><label>Nome da Empresa</label><input type="text" id="m-nomecliente" placeholder="Empresa Ltda."/></div>
+        <div class="field"><label>CNPJ</label><input type="text" id="m-cnpj" placeholder="00.000.000/0000-00"/></div>
+      </div>
+      <div class="field"><label>Sindicato ao qual está vinculada (CCT)</label><input type="text" id="m-sindicatovinc" placeholder="Ex: SINDCOM-CE"/></div>
+      <div class="field-row">
+        <div class="field"><label>Responsável da Empresa</label><input type="text" id="m-responsavel" placeholder="Nome do responsável"/></div>
+        <div class="field"><label>Telefone</label><input type="tel" id="m-telefone" placeholder="(85) 99999-9999"/></div>
+      </div>
+      <div class="field"><label>E-mail</label><input type="email" id="m-email" placeholder="contato@empresa.com"/></div>`;
+  } else if (tipo === "Associação") {
+    html = `
+      <div class="field-row">
+        <div class="field"><label>Nome da Associação</label><input type="text" id="m-nomecliente" placeholder="Associação..."/></div>
+        <div class="field"><label>Responsável</label><input type="text" id="m-responsavel" placeholder="Nome completo"/></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>E-mail</label><input type="email" id="m-email" placeholder="email@associacao.org"/></div>
+        <div class="field"><label>Telefone</label><input type="tel" id="m-telefone" placeholder="(85) 99999-9999"/></div>
+      </div>`;
+  } else if (tipo === "Pessoa Física") {
+    html = `
+      <div class="field"><label>Nome Completo</label><input type="text" id="m-nomecliente" placeholder="Nome do cliente"/></div>
+      <div class="field-row">
+        <div class="field"><label>Telefone</label><input type="tel" id="m-telefone" placeholder="(85) 99999-9999"/></div>
+        <div class="field"><label>E-mail</label><input type="email" id="m-email" placeholder="email@gmail.com"/></div>
+      </div>`;
+  }
+  dyn.innerHTML = html;
+
+  // Preenche botões de produto
+  const produtos = tipo === "Sindicato" ? PRODUTOS_SINDICATO : tipo === "Pessoa Física" ? PRODUTOS_PF : [];
+  const btnDiv = document.getElementById("prod-btns");
+  btnDiv.innerHTML = produtos.map(p =>
+    `<button type="button" class="prod-btn" onclick="selecionarProduto('${p.nome}',${p.valor})">${p.nome}<br/><small style="color:var(--green);font-family:'DM Mono',monospace">${fmt(p.valor)}/vida</small></button>`
+  ).join("") + (tipo==="Empresa"?`<span style="font-size:.78rem;color:var(--muted);padding:4px;">Empresa: defina produto e valor conforme CCT</span>`:"");
+}
+
+function selecionarProduto(nome, valor) {
+  document.getElementById("m-produto").value   = nome;
+  document.getElementById("m-valorvida").value = valor;
+  document.querySelectorAll(".prod-btn").forEach(b => b.classList.remove("sel"));
+  event.target.closest(".prod-btn").classList.add("sel");
+  calcPreview();
+}
+
+function calcPreview() {
+  const v = parseFloat(document.getElementById("m-valorvida").value)||0;
+  const n = parseFloat(document.getElementById("m-vidas").value)||0;
+  const total = v * n;
+  const com   = total * 0.4;
+  const box   = document.getElementById("preview-box");
+  if (v > 0 && n > 0) {
+    box.style.display = "block";
+    document.getElementById("prev-receita").textContent = fmt(total);
+    document.getElementById("prev-comissao").textContent = "Sua comissão (40%): " + fmt(com);
+  } else { box.style.display = "none"; }
+}
+
+async function salvarContrato() {
+  const tipo = document.getElementById("m-tipo").value;
+  if (!tipo) { alert("Selecione o tipo de cliente."); return; }
+
+  const g = id => (document.getElementById(id)||{}).value || "";
+
+  const params = {
+    action:           "SAVE_CONTRACT",
+    ID:               g("m-id"),
+    TipoCliente:      tipo,
+    NomeCliente:      g("m-nomecliente"),
+    NomeSindicato:    g("m-nomesindicato"),
+    CNPJ:             g("m-cnpj"),
+    SindicatoVinculado: g("m-sindicatovinc"),
+    Responsavel:      g("m-responsavel"),
+    Email:            g("m-email"),
+    Telefone:         g("m-telefone"),
+    Produto:          g("m-produto"),
+    ValorVida:        g("m-valorvida"),
+    VidasIniciais:    g("m-vidas"),
+    Vendedor:         g("m-vendedor") || VENDEDOR,
+    Dia:              g("m-dia"),
+    Mes:              g("m-mes"),
+    Obs:              g("m-obs")
+  };
+
+  const btn = document.getElementById("btn-salvar-modal");
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Salvando...';
+  const res = await api(params);
+  btn.disabled = false; btn.innerHTML = "💾 Salvar Contrato";
+  if (res) { fecharModal(); sincronizar(); }
+}
+
+// ════════════════════════════════════════════════
+// MOVIMENTAÇÕES
+// ════════════════════════════════════════════════
+function mostrarFormMov(cid, vv) {
+  const form = document.getElementById("form-mov-"+cid);
+  form.style.display = form.style.display === "none" ? "block" : "none";
+  document.getElementById("movid-"+cid).value = "";
+  document.getElementById("movvv-"+cid).value = vv;
+}
+
+function editarMov(m) {
+  const form = document.getElementById("form-mov-"+m.ContratoID);
+  if (!form) return;
+  form.style.display = "block";
+  document.getElementById("movid-"+m.ContratoID).value   = m.ID;
+  document.getElementById("movmes-"+m.ContratoID).value  = m.NumMes;
+  document.getElementById("movvidas-"+m.ContratoID).value= m.VidasAdicionadas;
+  document.getElementById("movvv-"+m.ContratoID).value   = m.ValorVida;
+}
+
+async function salvarMov(cid) {
+  const mes   = document.getElementById("movmes-"+cid).value;
+  const vidas = document.getElementById("movvidas-"+cid).value;
+  const vv    = document.getElementById("movvv-"+cid).value;
+  const movid = document.getElementById("movid-"+cid).value;
+
+  if (!vidas || !vv) { alert("Preencha vidas e valor."); return; }
+
+  const params = {
+    action: "SAVE_MOV",
+    ID: movid || "",
+    ContratoID: cid,
+    NumMes: mes,
+    VidasAdicionadas: vidas,
+    ValorVida: vv
+  };
+  const res = await api(params);
+  if (res) sincronizar();
+}
+
+async function deletarMov(id, cid) {
+  if (!confirm("Remover esta movimentação?")) return;
+  const res = await api({ action:"DELETE_MOV", ID:id });
+  if (res) sincronizar();
+}
+
+async function deletarContrato(id) {
+  if (!confirm("Excluir este contrato e todas as movimentações vinculadas?")) return;
+  const res = await api({ action:"DELETE_CONTRACT", ID:id });
+  if (res) sincronizar();
+}
+
+// ════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════
+function esc(str) {
+  return String(str||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+</script>
+</body>
+</html>
