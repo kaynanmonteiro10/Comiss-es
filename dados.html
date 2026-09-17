@@ -1,0 +1,398 @@
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Contratos</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 30px;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            color: #222;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        #status {
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #777;
+        }
+
+        .tabela {
+            background: white;
+            border-radius: 12px;
+            overflow: auto;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+        }
+
+        table {
+            width: 100%;
+            min-width: 1200px;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #fafafa;
+            padding: 14px;
+            text-align: left;
+            font-size: 13px;
+            border-bottom: 1px solid #ddd;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 14px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .vazio {
+            text-align: center;
+            padding: 30px;
+            color: #777;
+        }
+
+        .erro {
+            color: #c62828 !important;
+        }
+
+        .sucesso {
+            color: #2e7d32 !important;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Contratos</h1>
+
+    <div id="status">
+        Carregando...
+    </div>
+
+    <div class="tabela">
+
+        <table>
+
+            <thead>
+
+                <tr>
+                    <th>ID</th>
+                    <th>Tipo de cliente</th>
+                    <th>Nome do cliente</th>
+                    <th>Nome do sindicato</th>
+                    <th>CNPJ</th>
+                    <th>Sindicato vinculado</th>
+                    <th>Responsável</th>
+                    <th>Vidas</th>
+                    <th>Dia</th>
+                    <th>Mês</th>
+                    <th>Vendedor</th>
+                </tr>
+
+            </thead>
+
+            <tbody id="contratos">
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    /*
+    ============================================================
+    COLOQUE AQUI A URL DA SUA API
+    ============================================================
+    */
+
+    const API_URL =
+        "https://script.google.com/macros/library/d/13LMklexaO7Jsga5bE-x4iOMF__nFffvYHATPvJL7CFHAzSPa9_Y0t4-u/1";
+
+
+    /*
+    ============================================================
+    BUSCAR DADOS
+    ============================================================
+    */
+
+    async function carregarContratos() {
+
+        const status =
+            document.getElementById("status");
+
+        const tabela =
+            document.getElementById("contratos");
+
+
+        try {
+
+            const resposta = await fetch(
+                API_URL + "?action=READ_ALL"
+            );
+
+
+            if (!resposta.ok) {
+
+                throw new Error(
+                    "HTTP " + resposta.status
+                );
+
+            }
+
+
+            const dados =
+                await resposta.json();
+
+
+            if (!dados.ok) {
+
+                throw new Error(
+                    dados.erro || "Erro retornado pela API"
+                );
+
+            }
+
+
+            /*
+            ====================================================
+            PEGAMOS SOMENTE CONTRATOS
+            ====================================================
+            */
+
+            const contratos =
+                dados.contratos || [];
+
+
+            /*
+            ====================================================
+            LIMPA A TABELA
+            ====================================================
+            */
+
+            tabela.innerHTML = "";
+
+
+            /*
+            ====================================================
+            NENHUM CONTRATO
+            ====================================================
+            */
+
+            if (contratos.length === 0) {
+
+                tabela.innerHTML = `
+                    <tr>
+                        <td
+                            colspan="11"
+                            class="vazio"
+                        >
+                            Nenhum contrato encontrado.
+                        </td>
+                    </tr>
+                `;
+
+                status.textContent =
+                    "Nenhum contrato encontrado.";
+
+                return;
+
+            }
+
+
+            /*
+            ====================================================
+            CRIA AS LINHAS
+            ====================================================
+            */
+
+            contratos.forEach(
+                contrato => {
+
+                    const linha =
+                        document.createElement("tr");
+
+
+                    linha.innerHTML = `
+
+                        <td>
+                            ${escapar(contrato.ID)}
+                        </td>
+
+                        <td>
+                            ${escapar(contrato.TipoCliente)}
+                        </td>
+
+                        <td>
+                            ${escapar(contrato.NomeCliente)}
+                        </td>
+
+                        <td>
+                            ${escapar(contrato.NomeSindicato)}
+                        </td>
+
+                        <td>
+                            ${escapar(contrato.CNPJ)}
+                        </td>
+
+                        <td>
+                            ${escapar(contrato.SindicatoVinculado)}
+                        </td>
+
+                        <td>
+                            ${escapar(contrato.Responsavel)}
+                        </td>
+
+                        <td>
+                            ${escapar(contrato.VidasIniciais)}
+                        </td>
+
+                        <td>
+                            ${escapar(contrato.Dia)}
+                        </td>
+
+                        <td>
+                            ${escapar(contrato.Mes)}
+                        </td>
+
+                        <td>
+                            ${escapar(contrato.Vendedor)}
+                        </td>
+
+                    `;
+
+
+                    tabela.appendChild(linha);
+
+                }
+            );
+
+
+            /*
+            ====================================================
+            STATUS
+            ====================================================
+            */
+
+            const agora =
+                new Date().toLocaleTimeString(
+                    "pt-BR"
+                );
+
+
+            status.textContent =
+                contratos.length +
+                " contrato(s) • Atualizado às " +
+                agora;
+
+
+            status.className =
+                "sucesso";
+
+        }
+
+
+        catch (erro) {
+
+            console.error(
+                "Erro:",
+                erro
+            );
+
+
+            status.textContent =
+                "Erro ao carregar os dados: " +
+                erro.message;
+
+
+            status.className =
+                "erro";
+
+        }
+
+    }
+
+
+    /*
+    ============================================================
+    ESCAPAR HTML
+    ============================================================
+    */
+
+    function escapar(valor) {
+
+        if (
+            valor === null ||
+            valor === undefined
+        ) {
+
+            return "";
+
+        }
+
+
+        return String(valor)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+
+    }
+
+
+    /*
+    ============================================================
+    PRIMEIRA CARGA
+    ============================================================
+    */
+
+    carregarContratos();
+
+
+    /*
+    ============================================================
+    ATUALIZA A CADA 5 SEGUNDOS
+    ============================================================
+    */
+
+    setInterval(
+        carregarContratos,
+        5000
+    );
+
+</script>
+
+</body>
+
+</html>
+```
